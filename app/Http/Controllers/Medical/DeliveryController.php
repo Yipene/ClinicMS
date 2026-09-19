@@ -25,7 +25,7 @@ class DeliveryController extends Controller
         return view('medical.deliveries.form', [
             'delivery' => new Delivery,
             'patients' => Patient::orderBy('last_name')->get(),
-            'doctors' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'doctors' => User::clinicians()->orderBy('name')->get(),
         ]);
     }
 
@@ -42,6 +42,7 @@ class DeliveryController extends Controller
             'fee' => ['required', 'numeric', 'min:0'],
             'postnatal_notes' => ['nullable', 'string'],
         ]);
+        abort_unless(User::clinicians()->whereKey($data['doctor_id'])->exists(), 422, 'Le médecin sélectionné n’est pas habilité.');
 
         $patient = Patient::findOrFail($data['patient_id']);
         $label = $data['type'] === 'cesarean' ? 'Accouchement (césarienne)' : 'Accouchement (voie basse)';

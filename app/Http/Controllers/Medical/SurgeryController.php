@@ -28,7 +28,7 @@ class SurgeryController extends Controller
         return view('medical.surgeries.form', [
             'surgery' => new Surgery,
             'patients' => Patient::orderBy('last_name')->get(),
-            'surgeons' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'surgeons' => User::clinicians()->orderBy('name')->get(),
             'rooms' => OperatingRoom::where('is_available', true)->orderBy('name')->get(),
         ]);
     }
@@ -44,6 +44,7 @@ class SurgeryController extends Controller
             'fee' => ['required', 'numeric', 'min:0'],
             'status' => ['required', 'in:planned,in_progress,completed,cancelled'],
         ]);
+        abort_unless(User::clinicians()->whereKey($data['surgeon_id'])->exists(), 422, 'Le chirurgien sélectionné n’est pas habilité.');
 
         $patient = Patient::findOrFail($data['patient_id']);
         $sale = $data['fee'] > 0

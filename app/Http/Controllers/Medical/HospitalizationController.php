@@ -31,7 +31,7 @@ class HospitalizationController extends Controller
         return view('medical.hospitalizations.form', [
             'hospitalization' => new Hospitalization,
             'patients' => Patient::orderBy('last_name')->get(),
-            'doctors' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'doctors' => User::clinicians()->orderBy('name')->get(),
             'rooms' => Room::where('is_available', true)->orderBy('name')->get(),
         ]);
     }
@@ -46,6 +46,7 @@ class HospitalizationController extends Controller
             'notes' => ['nullable', 'string'],
             'admission_fee' => ['nullable', 'numeric', 'min:0'],
         ]);
+        abort_unless(User::clinicians()->whereKey($data['doctor_id'])->exists(), 422, 'Le médecin sélectionné n’est pas habilité.');
 
         $patient = Patient::findOrFail($data['patient_id']);
         $fee = (float) ($data['admission_fee'] ?? 0);

@@ -12,14 +12,14 @@
     <div class="rounded-2xl bg-white border shadow-sm overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50 text-slate-500 text-left">
-                <tr><th class="px-4 py-3">Réf.</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Patient</th><th class="px-4 py-3">Statut</th><th class="px-4 py-3 text-right">Total</th><th></th></tr>
+                <tr><th class="px-4 py-3">Réf.</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Statut</th><th class="px-4 py-3 text-right">Total</th><th></th></tr>
             </thead>
             <tbody class="divide-y">
                 @forelse($sales as $sale)
                     <tr class="hover:bg-slate-50">
                         <td class="px-4 py-3 font-mono text-xs">{{ $sale->reference }}</td>
                         <td class="px-4 py-3">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-4 py-3">{{ $sale->patient?->full_name ?? '—' }}</td>
+                        <td class="px-4 py-3">{{ $sale->patient?->full_name ?? $sale->customer_name ?? 'Comptoir anonyme' }}@if($sale->customer_phone)<span class="block text-xs text-slate-400">{{ $sale->customer_phone }}</span>@endif</td>
                         <td class="px-4 py-3"><span class="text-xs rounded-full bg-slate-100 px-2">{{ $sale->status }}</span></td>
                         <td class="px-4 py-3 text-right font-medium">{{ format_money($sale->total) }}</td>
                         <td class="px-4 py-3 text-right"><a href="{{ route('pharmacie.sales.show', $sale) }}" class="text-teal-600">Reçu</a></td>

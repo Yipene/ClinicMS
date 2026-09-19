@@ -44,11 +44,14 @@ class ClinicSeeder extends Seeder
                 'hospitalizations.manage', 'surgeries.manage', 'deliveries.manage',
             ],
             'caissier' => [
-                'dashboard.view', 'caisse.manage', 'caisse.reports', 'patients.manage',
+                'dashboard.view', 'caisse.manage', 'caisse.reports',
             ],
             'pharmacien' => [
                 'dashboard.view', 'pharmacie.sell', 'pharmacie.supply',
-                'pharmacie.cancel', 'stock.manage', 'stock.inventory',
+                'pharmacie.cancel',
+            ],
+            'gestionnaire_stock' => [
+                'dashboard.view', 'stock.manage', 'stock.inventory',
             ],
         ];
 
@@ -73,6 +76,7 @@ class ClinicSeeder extends Seeder
             ['email' => 'medecin@clinic.local', 'name' => 'Dr. Ibrahim Ouédraogo', 'role' => 'medecin'],
             ['email' => 'caissier@clinic.local', 'name' => 'Aminata Koné', 'role' => 'caissier'],
             ['email' => 'pharmacien@clinic.local', 'name' => 'Moussa Sanou', 'role' => 'pharmacien'],
+            ['email' => 'stock@clinic.local', 'name' => 'Gestionnaire du stock', 'role' => 'gestionnaire_stock'],
         ];
 
         foreach ($users as $data) {

@@ -16,14 +16,41 @@
 
         <div class="lg:col-span-2 space-y-6">
             <div class="rounded-2xl bg-white border p-6 shadow-sm space-y-4">
-                <div>
-                    <label class="block text-sm font-medium">Patient</label>
-                    <select name="patient_id" class="mt-1 w-full rounded-lg border-slate-200">
-                        <option value="">— Comptant —</option>
+                <div class="border-b pb-4">
+                    <label class="block text-sm font-medium">Bénéficiaire de la vente</label>
+                    <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
+                            <input type="radio" value="patient" x-model="customerType" name="customer_type">
+                            <span>Patient clinique</span>
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
+                            <input type="radio" value="external" x-model="customerType" name="customer_type">
+                            <span>Client externe</span>
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
+                            <input type="radio" value="anonymous" x-model="customerType" name="customer_type">
+                            <span>Comptoir anonyme</span>
+                        </label>
+                    </div>
+                    <div x-show="customerType === 'patient'" x-cloak class="mt-3">
+                        <label class="block text-sm font-medium">Dossier patient</label>
+                        <select name="patient_id" class="mt-1 w-full rounded-lg border-slate-200">
+                            <option value="">— Sélectionner un patient —</option>
                         @foreach($patients as $patient)
                             <option value="{{ $patient->id }}">{{ $patient->full_name }}</option>
                         @endforeach
-                    </select>
+                        </select>
+                    </div>
+                    <div x-show="customerType === 'external'" x-cloak class="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium">Nom du client</label>
+                            <input type="text" name="customer_name" value="{{ old('customer_name') }}" x-bind:required="customerType === 'external'" class="mt-1 w-full rounded-lg border-slate-200" placeholder="Nom ou raison sociale">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Téléphone <span class="font-normal text-slate-400">(facultatif)</span></label>
+                            <input type="text" name="customer_phone" value="{{ old('customer_phone') }}" class="mt-1 w-full rounded-lg border-slate-200" placeholder="+225 …">
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Recherche médicament</label>
@@ -80,7 +107,7 @@
     <script>
         function pharmacySale(products) {
             return {
-                products, filteredProducts: products, search: '',
+                products, filteredProducts: products, search: '', customerType: '{{ old('customer_type', 'anonymous') }}',
                 lines: [{ product_id: '', description: '', quantity: 1, unit_price: 0 }],
                 payments: [{ method: 'cash', amount: 0, reference: '' }], discount: 0,
                 get subtotal() { return this.lines.reduce((s,l)=>s+l.quantity*l.unit_price,0); },

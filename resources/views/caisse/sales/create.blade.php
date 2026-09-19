@@ -16,12 +16,21 @@
           @submit="prepareSubmit"
           class="grid gap-6 lg:grid-cols-3">
         @csrf
+        <input type="hidden" name="module" value="caisse">
 
         <div class="lg:col-span-2 space-y-6">
             <div class="rounded-2xl bg-white border border-slate-100 p-6 shadow-sm space-y-4">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-medium">Patient (optionnel)</label>
+                        <label class="block text-sm font-medium">Type de client</label>
+                        <select name="customer_type" class="mt-1 w-full rounded-lg border-slate-200">
+                            <option value="anonymous" @selected(old('customer_type', 'anonymous') === 'anonymous')>Comptoir anonyme</option>
+                            <option value="patient" @selected(old('customer_type') === 'patient')>Patient clinique</option>
+                            <option value="external" @selected(old('customer_type') === 'external')>Client externe</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Dossier patient (si applicable)</label>
                         <select name="patient_id" class="mt-1 w-full rounded-lg border-slate-200">
                             <option value="">— Aucun —</option>
                             @foreach($patients as $patient)
@@ -29,13 +38,15 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-medium">Module</label>
-                        <select name="module" class="mt-1 w-full rounded-lg border-slate-200">
-                            @foreach(['caisse','pharmacie','consultation','examen'] as $mod)
-                                <option value="{{ $mod }}" @selected(old('module', 'caisse') === $mod)>{{ ucfirst($mod) }}</option>
-                            @endforeach
-                        </select>
+                        <label class="block text-sm font-medium">Nom du client externe</label>
+                        <input type="text" name="customer_name" value="{{ old('customer_name') }}" class="mt-1 w-full rounded-lg border-slate-200" placeholder="Facultatif sauf client externe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Téléphone client</label>
+                        <input type="text" name="customer_phone" value="{{ old('customer_phone') }}" class="mt-1 w-full rounded-lg border-slate-200" placeholder="Facultatif">
                     </div>
                 </div>
 

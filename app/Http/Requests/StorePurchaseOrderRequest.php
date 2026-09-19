@@ -6,6 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StorePurchaseOrderRequest extends FormRequest
 {
+
+protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+{
+    throw new \Illuminate\Validation\ValidationException($validator, redirect()->back()
+        ->withInput()
+        ->withErrors($validator, 'appro'));
+}
+
     public function authorize(): bool
     {
         return $this->user()->can('stock.manage');

@@ -8,7 +8,14 @@
         <p><span class="text-slate-500">Reçu N°</span> <strong>{{ $sale->reference }}</strong></p>
         <p><span class="text-slate-500">Date</span> {{ $sale->created_at->format('d/m/Y H:i') }}</p>
         <p><span class="text-slate-500">Caissier</span> {{ $sale->cashier->name }}</p>
-        @if($sale->patient)<p><span class="text-slate-500">Patient</span> {{ $sale->patient->full_name }}</p>@endif
+        @if($sale->patient)
+            <p><span class="text-slate-500">Patient</span> {{ $sale->patient->full_name }}</p>
+        @elseif($sale->customer_name)
+            <p><span class="text-slate-500">Client</span> {{ $sale->customer_name }}</p>
+            @if($sale->customer_phone)<p><span class="text-slate-500">Téléphone</span> {{ $sale->customer_phone }}</p>@endif
+        @else
+            <p><span class="text-slate-500">Client</span> Comptoir anonyme</p>
+        @endif
     </div>
     <table class="w-full text-sm mb-4">
         <thead class="border-b"><tr class="text-slate-500 text-left"><th class="py-2">Désignation</th><th class="py-2 text-center">Qté</th><th class="py-2 text-right">Montant</th></tr></thead>

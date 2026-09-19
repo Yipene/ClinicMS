@@ -15,40 +15,16 @@ use Illuminate\View\View;
 
 class PharmacySaleController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $sales = Sale::with(['patient', 'cashier'])
-            ->where('module', 'pharmacie')
-            ->when($request->q, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('reference', 'ilike', "%{$search}%")
-                        ->orWhereHas('patient', fn ($p) => $p->where('first_name', 'ilike', "%{$search}%")
-                            ->orWhere('last_name', 'ilike', "%{$search}%"));
-                });
-            })
-            ->when($request->date, fn ($q, $date) => $q->whereDate('created_at', $date))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('pharmacie.sales.index', [
-            'sales' => $sales,
-            'clinic' => ClinicSetting::current(),
-        ]);
-    }
-
-    public function create(): View
-    {
-        return view('pharmacie.sales.create', [
-            'patients' => Patient::orderBy('last_name')->get(),
-            'products' => Product::where('is_active', true)->orderBy('name')->get(),
-            'clinic' => ClinicSetting::current(),
-        ]);
-    }
+    
 
     public function store(StoreSaleRequest $request, SaleService $saleService): RedirectResponse
     {
-        $data = $request->only(['patient_id', 'discount', 'notes']);
+        $data = $request->only([
+            'patient_id', 'customer_type', 'customer_name', 'customer_phone', 'discount', 'notes',
+        ]);
+        if ($data['customer_type'] !== 'patient') {
+            $data['patient_id'] = null;
+        }
         $data['module'] = 'pharmacie';
 
         try {
@@ -58,7 +34,7 @@ class PharmacySaleController extends Controller
                 $request->validated('payments'),
             );
         } catch (\InvalidArgumentException $e) {
-            return back()->withInput()->withErrors(['items' => $e->getMessage()]);
+            return back()->withInput()->withErrors(['items' => $e->getMessage()], 'sale');
         }
 
         return redirect()->route('pharmacie.sales.show', $sale)

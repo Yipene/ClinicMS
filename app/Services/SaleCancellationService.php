@@ -20,13 +20,29 @@ class SaleCancellationService
         }
 
         return DB::transaction(function () use ($sale, $type, $reason, $itemIds) {
+            $sale = Sale::lockForUpdate()->findOrFail($sale->id);
             $sale->load('items.product');
 
-            $itemsToCancel = $sale->items;
-            if ($type === 'partial' && $itemIds) {
-                $itemsToCancel = $sale->items->whereIn('id', $itemIds);
+            $cancelledItemIds = collect($sale->cancellations)
+                ->pluck('items')
+                ->flatten(1)
+                ->pluck('sale_item_id')
+                ->filter()
+                ->map(fn ($id) => (int) $id);
+
+            $availableItems = $sale->items->reject(
+                fn (SaleItem $item) => $cancelledItemIds->contains($item->id)
+            );
+
+            if ($availableItems->isEmpty()) {
+                throw new \InvalidArgumentException('Toutes les lignes de cette vente sont déjà annulées.');
+            }
+
+            $itemsToCancel = $availableItems;
+            if ($type === 'partial') {
+                $itemsToCancel = $availableItems->whereIn('id', $itemIds ?? []);
                 if ($itemsToCancel->isEmpty()) {
-                    throw new \InvalidArgumentException('Sélectionnez au moins une ligne à annuler.');
+                    throw new \InvalidArgumentException('Sélectionnez au moins une ligne disponible à annuler.');
                 }
             }
 
@@ -62,7 +78,7 @@ class SaleCancellationService
                 'items' => $cancelledItems,
             ]);
 
-            if ($type === 'full' || $itemsToCancel->count() === $sale->items->count()) {
+            if ($type === 'full' || $itemsToCancel->count() === $availableItems->count()) {
                 $sale->update(['status' => 'cancelled', 'payment_status' => 'unpaid']);
             } else {
                 $sale->update(['status' => 'partially_cancelled']);

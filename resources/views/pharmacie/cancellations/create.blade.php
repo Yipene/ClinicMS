@@ -23,10 +23,10 @@
                 </select>
             </div>
             <div id="partial-items" class="hidden space-y-2">
-                <p class="text-sm text-slate-500">Lignes à annuler (stock restitué) :</p>
+                <p class="text-sm text-slate-500">Sélectionnez les lignes à annuler (stock restitué) :</p>
                 @foreach($sale->items as $item)
                     <label class="flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="item_ids[]" value="{{ $item->id }}">
+                        <input type="checkbox" name="item_ids[]" value="{{ $item->id }}" @disabled($sale->cancellations->flatMap(fn ($c) => $c->items ?? [])->pluck('sale_item_id')->contains($item->id))>
                         {{ $item->description }} × {{ $item->quantity }} — {{ format_money($item->line_total) }}
                     </label>
                 @endforeach

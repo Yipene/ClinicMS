@@ -37,8 +37,8 @@ class BlocController extends Controller
     {
         $data = $request->validate([
             'operating_room_id' => ['required', 'exists:operating_rooms,id'],
-            'patient_id' => ['nullable', 'exists:patients,id'],
-            'external_client' => ['nullable', 'string', 'max:255'],
+            'patient_id' => ['nullable', 'required_without:external_client', 'exists:patients,id'],
+            'external_client' => ['nullable', 'required_without:patient_id', 'string', 'max:255'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'billing_type' => ['required', 'in:half_day,full_day'],

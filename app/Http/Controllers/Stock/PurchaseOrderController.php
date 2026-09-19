@@ -29,6 +29,20 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
+    public function storeAndReceive(StorePurchaseOrderRequest $request, PurchaseOrderService $service): RedirectResponse
+    {
+            $order = $service->create(
+                $request->only(['supplier_id', 'expected_at', 'notes']),
+                $request->validated('items'),);
+
+
+    $quantities = $order->items->pluck('quantity', 'id')->all();
+
+    $service->receive($order, $quantities);
+
+    return redirect()->route('pharmacie.index')->with('status', 'Approvisionnement enregistré — stock mis à jour.');
+        }
+
     public function create(): View
     {
         return view('stock.purchase-orders.create', [

@@ -48,9 +48,17 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request, SaleService $saleService): RedirectResponse
     {
+        $saleData = $request->only([
+            'patient_id', 'customer_type', 'customer_name', 'customer_phone', 'discount', 'notes',
+        ]);
+        $saleData['module'] = 'caisse';
+        if (($saleData['customer_type'] ?? 'anonymous') !== 'patient') {
+            $saleData['patient_id'] = null;
+        }
+
         try {
             $sale = $saleService->create(
-                $request->only(['patient_id', 'module', 'discount', 'notes']),
+                $saleData,
                 $request->validated('items'),
                 $request->validated('payments'),
             );
@@ -64,6 +72,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale): View
     {
+        abort_unless($sale->module === 'caisse', 404);
         $sale->load(['items.product', 'payments', 'patient', 'cashier']);
 
         return view('caisse.sales.show', [
@@ -74,6 +83,7 @@ class SaleController extends Controller
 
     public function pdf(Sale $sale)
     {
+        abort_unless($sale->module === 'caisse', 404);
         $sale->load(['items.product', 'payments', 'patient', 'cashier']);
 
         return Pdf::loadView('pdf.receipt', [

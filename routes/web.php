@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Api\ProductApiController;
 use App\Http\Controllers\Caisse\CaisseReportController;
-use App\Http\Controllers\Caisse\SaleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Medical\BlocController;
 use App\Http\Controllers\Medical\ConsultationController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\Medical\ExamController;
 use App\Http\Controllers\Medical\HospitalizationController;
 use App\Http\Controllers\Medical\PatientController;
 use App\Http\Controllers\Medical\SurgeryController;
+use App\Http\Controllers\Pharmacie\PharmacieController;
 use App\Http\Controllers\Pharmacie\PharmacyCancellationController;
 use App\Http\Controllers\Pharmacie\PharmacySaleController;
 use App\Http\Controllers\ProfileController;
@@ -38,14 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
 
-    Route::middleware('permission:caisse.manage')->prefix('caisse')->name('caisse.')->group(function () {
-        Route::get('/ventes', [SaleController::class, 'index'])->name('sales.index');
-        Route::get('/ventes/nouvelle', [SaleController::class, 'create'])->name('sales.create');
-        Route::post('/ventes', [SaleController::class, 'store'])->name('sales.store');
-        Route::get('/ventes/{sale}', [SaleController::class, 'show'])->name('sales.show');
-        Route::get('/ventes/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
-    });
-
     Route::middleware('permission:caisse.reports')->prefix('caisse')->name('caisse.')->group(function () {
         Route::get('/recette-journaliere', [CaisseReportController::class, 'daily'])->name('daily');
         Route::get('/recette-journaliere/export', [CaisseReportController::class, 'exportDaily'])->name('daily.export');
@@ -62,16 +54,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/produits/{product}/modifier', [ProductController::class, 'edit'])->name('products.edit');
         Route::put('/produits/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::get('/mouvements', [StockMovementController::class, 'index'])->name('movements.index');
-        Route::get('/approvisionnements', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-        Route::get('/approvisionnements/nouveau', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
-        Route::post('/approvisionnements', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-        Route::get('/approvisionnements/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-        Route::post('/approvisionnements/{purchaseOrder}/reception', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
         Route::get('/sortie-interne', [StockInternalController::class, 'create'])->name('internal.create');
         Route::post('/sortie-interne', [StockInternalController::class, 'store'])->name('internal.store');
         Route::get('/peremption', [ExpiredStockController::class, 'index'])->name('expired.index');
         Route::post('/peremption/{product}', [ExpiredStockController::class, 'destroy'])->name('expired.destroy');
         Route::get('/export', [StockExportController::class, 'export'])->name('export');
+    });
+
+    Route::middleware('role_or_permission:stock.manage|pharmacie.supply')->prefix('stock')->name('stock.')->group(function () {
+        Route::get('/approvisionnements', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/approvisionnements/nouveau', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/approvisionnements', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/approvisionnements/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::post('/approvisionnements/{purchaseOrder}/reception', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     });
 
     Route::middleware('permission:stock.inventory')->prefix('stock')->name('stock.')->group(function () {
@@ -80,20 +75,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/inventaire', [InventoryController::class, 'store'])->name('inventory.store');
     });
 
-    Route::middleware('permission:pharmacie.sell')->prefix('pharmacie')->name('pharmacie.')->group(function () {
-        Route::get('/ventes', [PharmacySaleController::class, 'index'])->name('sales.index');
-        Route::get('/ventes/nouvelle', [PharmacySaleController::class, 'create'])->name('sales.create');
-        Route::post('/ventes', [PharmacySaleController::class, 'store'])->name('sales.store');
-        Route::get('/ventes/{sale}', [PharmacySaleController::class, 'show'])->name('sales.show');
-        Route::get('/api/produits', [PharmacySaleController::class, 'searchProducts'])->name('products.search');
+    Route::middleware('permission:pharmacie.sell')->group(function () {
+    Route::get('/pharmacie', [PharmacieController::class, 'index'])->name('pharmacie.index');
+    Route::post('/pharmacie/ventes', [PharmacySaleController::class, 'store'])->name('pharmacie.sales.store');
+    Route::get('/pharmacie/ventes/{sale}', [PharmacySaleController::class, 'show'])->name('pharmacie.sales.show');
+    Route::get('/pharmacie/api/produits', [PharmacySaleController::class, 'searchProducts'])->name('pharmacie.products.search');
     });
 
-    Route::middleware('permission:pharmacie.cancel')->prefix('pharmacie')->name('pharmacie.')->group(function () {
-        Route::get('/annulations', [PharmacyCancellationController::class, 'index'])->name('cancellations.index');
-        Route::get('/annulations/nouvelle', [PharmacyCancellationController::class, 'create'])->name('cancellations.create');
-        Route::post('/annulations', [PharmacyCancellationController::class, 'store'])->name('cancellations.store');
+    Route::middleware('permission:pharmacie.cancel')->group(function () {
+    Route::post('/pharmacie/annulations', [PharmacyCancellationController::class, 'store'])->name('pharmacie.cancellations.store');
     });
 
+    Route::middleware('role_or_permission:stock.manage|pharmacie.supply')->group(function () {
+    Route::post('/pharmacie/approvisionnements', [PurchaseOrderController::class, 'storeAndReceive'])->name('pharmacie.appro.store');
+    });
+    
     Route::get('/pharmacie/approvisionnement', fn () => redirect()->route('stock.purchase-orders.index'))
         ->middleware('permission:pharmacie.supply')
         ->name('pharmacie.supply.index');

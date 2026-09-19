@@ -7,16 +7,36 @@ use Illuminate\Validation\Rule;
 
 class StoreSaleRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'customer_type' => $this->input(
+                'customer_type',
+                $this->filled('patient_id') ? 'patient' : 'anonymous'
+            ),
+        ]);
+    }
+
+protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+{
+    throw new \Illuminate\Validation\ValidationException($validator, redirect()->back()
+        ->withInput()
+        ->withErrors($validator, 'sale'));
+}
+
     public function authorize(): bool
     {
-        return $this->user()->can('caisse.manage') || $this->user()->can('pharmacie.sell');
+        return $this->user()->can('pharmacie.sell');
     }
 
     public function rules(): array
     {
         return [
-            'patient_id' => ['nullable', 'exists:patients,id'],
-            'module' => ['required', Rule::in(['caisse', 'pharmacie', 'consultation', 'examen', 'hospitalisation', 'intervention', 'accouchement', 'bloc'])],
+            'patient_id' => ['nullable', 'required_if:customer_type,patient', 'exists:patients,id'],
+            'customer_type' => ['required', Rule::in(['patient', 'external', 'anonymous'])],
+            'customer_name' => ['nullable', 'required_if:customer_type,external', 'string', 'max:150'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'module' => ['required', Rule::in(['pharmacie'])],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],

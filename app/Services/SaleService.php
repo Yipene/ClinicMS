@@ -24,6 +24,9 @@ class SaleService
             $sale = Sale::create([
                 'reference' => ReferenceGenerator::generate('VTE', new Sale),
                 'patient_id' => $saleData['patient_id'] ?? null,
+                'customer_type' => $saleData['customer_type'] ?? ($saleData['patient_id'] ? 'patient' : 'anonymous'),
+                'customer_name' => $saleData['customer_name'] ?? null,
+                'customer_phone' => $saleData['customer_phone'] ?? null,
                 'cashier_id' => auth()->id(),
                 'module' => $saleData['module'] ?? 'caisse',
                 'subtotal' => $subtotal,

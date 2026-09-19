@@ -29,7 +29,7 @@ class ConsultationController extends Controller
         return view('medical.consultations.form', [
             'consultation' => new Consultation,
             'patients' => Patient::orderBy('last_name')->get(),
-            'doctors' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'doctors' => User::clinicians()->orderBy('name')->get(),
             'selectedPatient' => $request->patient_id ? Patient::find($request->patient_id) : null,
         ]);
     }
@@ -47,6 +47,7 @@ class ConsultationController extends Controller
             'follow_up_at' => ['nullable', 'date'],
             'bill_now' => ['boolean'],
         ]);
+        abort_unless(User::clinicians()->whereKey($data['doctor_id'])->exists(), 422, 'Le médecin sélectionné n’est pas habilité.');
 
         $patient = Patient::findOrFail($data['patient_id']);
         $sale = ($data['bill_now'] ?? true) && $data['fee'] > 0

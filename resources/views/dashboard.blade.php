@@ -1,6 +1,6 @@
 <x-clinic-layout>
     <x-slot name="header">Tableau de bord</x-slot>
-    <x-slot name="subheader">{{ $clinic->name }} — Vue d'ensemble</x-slot>
+    <x-slot name="subheader">{{ config('app.name') }} — Vue d'ensemble</x-slot>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
         <x-stat-card
@@ -31,6 +31,7 @@
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
+            @can('pharmacie.sell')
             <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <h2 class="font-semibold text-slate-900">Recettes par module (24h)</h2>
@@ -60,7 +61,9 @@
                     @endforelse
                 </div>
             </div>
+            @endcan
 
+            @can('pharmacie.sell')
             <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100">
                     <h2 class="font-semibold text-slate-900">Dernières transactions</h2>
@@ -79,7 +82,7 @@
                             @forelse ($recentSales as $sale)
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-3 font-mono text-xs">{{ $sale->reference }}</td>
-                                    <td class="px-6 py-3">{{ $sale->patient?->full_name ?? '—' }}</td>
+                                    <td class="px-6 py-3">{{ $sale->patient?->full_name ?? $sale->customer_name ?? 'Comptoir anonyme' }}</td>
                                     <td class="px-6 py-3">
                                         <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ $sale->module }}</span>
                                     </td>
@@ -94,13 +97,14 @@
                     </table>
                 </div>
             </div>
+            @endcan
         </div>
 
         <div class="space-y-6">
             <div class="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg">
                 <h3 class="font-semibold text-lg">Indicateurs rapides</h3>
                 <ul class="mt-4 space-y-3 text-sm text-slate-300">
-                    <li class="flex justify-between"><span>Ventes aujourd'hui</span><span class="font-semibold text-white">{{ $stats['sales_today'] }}</span></li>
+                    @can('pharmacie.sell')<li class="flex justify-between"><span>Ventes pharmacie aujourd'hui</span><span class="font-semibold text-white">{{ $stats['sales_today'] }}</span></li>@endcan
                     <li class="flex justify-between"><span>Lits occupés</span><span class="font-semibold text-white">{{ $stats['occupied_beds'] }}</span></li>
                     <li class="flex justify-between"><span>Produits critiques</span><span class="font-semibold text-amber-300">{{ $stats['low_stock_count'] }}</span></li>
                 </ul>
@@ -124,8 +128,6 @@
                 <p class="font-semibold">Accès rapide</p>
                 <div class="flex flex-wrap gap-x-4 gap-y-1">
                     @can('patients.manage')<a href="{{ route('patients.create') }}" class="text-teal-700 hover:underline">+ Patient</a>@endcan
-                    @can('pharmacie.sell')<a href="{{ route('pharmacie.sales.create') }}" class="text-teal-700 hover:underline">Vente pharmacie</a>@endcan
-                    @can('caisse.manage')<a href="{{ route('caisse.sales.create') }}" class="text-teal-700 hover:underline">Vente caisse</a>@endcan
                     @can('consultations.manage')<a href="{{ route('medical.consultations.create') }}" class="text-teal-700 hover:underline">Consultation</a>@endcan
                 </div>
             </div>

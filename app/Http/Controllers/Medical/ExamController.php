@@ -25,7 +25,7 @@ class ExamController extends Controller
         return view('medical.exams.form', [
             'exam' => new Exam,
             'patients' => Patient::orderBy('last_name')->get(),
-            'doctors' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'doctors' => User::clinicians()->orderBy('name')->get(),
             'selectedPatient' => $request->patient_id ? Patient::find($request->patient_id) : null,
         ]);
     }
@@ -41,6 +41,7 @@ class ExamController extends Controller
             'fee' => ['required', 'numeric', 'min:0'],
             'bill_now' => ['boolean'],
         ]);
+        abort_unless(User::clinicians()->whereKey($data['doctor_id'])->exists(), 422, 'Le médecin sélectionné n’est pas habilité.');
 
         $patient = Patient::findOrFail($data['patient_id']);
         $sale = ($data['bill_now'] ?? true) && $data['fee'] > 0
@@ -62,7 +63,7 @@ class ExamController extends Controller
 
         return view('medical.exams.edit', [
             'exam' => $exam,
-            'doctors' => User::role(['medecin', 'administrateur'])->orderBy('name')->get(),
+            'doctors' => User::clinicians()->orderBy('name')->get(),
         ]);
     }
 
